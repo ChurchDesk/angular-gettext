@@ -56,13 +56,14 @@ angular.module('gettext').constant('gettext', function (str) {
  * @name gettextCatalog
  * @requires gettextPlurals
  * @requires gettextFallbackLanguage
+ * @requires https://docs.angularjs.org/api/ng/service/$q $q
  * @requires https://docs.angularjs.org/api/ng/service/$http $http
  * @requires https://docs.angularjs.org/api/ng/service/$cacheFactory $cacheFactory
  * @requires https://docs.angularjs.org/api/ng/service/$interpolate $interpolate
  * @requires https://docs.angularjs.org/api/ng/service/$rootScope $rootScope
  * @description Provides set of method to translate stings
  */
-angular.module('gettext').factory('gettextCatalog', ["gettextPlurals", "gettextFallbackLanguage", "$http", "$cacheFactory", "$interpolate", "$rootScope", function (gettextPlurals, gettextFallbackLanguage, $http, $cacheFactory, $interpolate, $rootScope) {
+angular.module('gettext').factory('gettextCatalog', ["gettextPlurals", "gettextFallbackLanguage", "$http", "$cacheFactory", "$interpolate", "$rootScope", "$q", function (gettextPlurals, gettextFallbackLanguage, $http, $cacheFactory, $interpolate, $rootScope, $q) {
     var catalog;
     var noContext = '$$noContext';
 
@@ -88,6 +89,8 @@ angular.module('gettext').factory('gettextCatalog', ["gettextPlurals", "gettextF
             return string;
         }
     };
+
+    var languageSet = $q.defer();
 
     function broadcastUpdated() {
         /**
@@ -191,6 +194,7 @@ angular.module('gettext').factory('gettextCatalog', ["gettextPlurals", "gettextF
         setCurrentLanguage: function (lang) {
             this.currentLanguage = lang;
             broadcastUpdated();
+            languageSet.resolve();
         },
 
         /**
@@ -343,7 +347,13 @@ angular.module('gettext').factory('gettextCatalog', ["gettextPlurals", "gettextF
                 }
                 return response;
             });
-        }
+        },
+        /**
+         * @ngdoc promise
+         * @name gettextCatalog#languageSet
+         * @description A promise that's resolved when the setCurrentLanguage method is called
+         */
+        languageSet: languageSet.promise
     };
 
     return catalog;
